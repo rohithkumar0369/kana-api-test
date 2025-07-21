@@ -1,0 +1,31 @@
+{
+  "name": "kana-api-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "aptos-solana": "tsx src/cross-chain/aptos-solana.ts",
+    "solana-aptos": "tsx src/cross-chain/solana-aptos.ts",
+    "aptos-evm": "tsx src/cross-chain/aptos-evm.ts",
+    "evm-aptos": "tsx src/cross-chain/evm-aptos.ts",
+    "multi-token-evm-aptos": "tsx src/cross-chain-multi-token-swap/evm-aptos.ts",
+    "multi-token-solana-aptos": "tsx src/cross-chain-multi-token-swap/solana-aptos.ts",
+    "multi-chain-polygon-avalanche-aptos": "tsx src/multi-chain-batch-cross-chain-swap/polygon-avalanche-aptos.ts",
+    "multi-chain-polygon-solana-aptos":  "tsx src/multi-chain-batch-cross-chain-swap/polygon-solana-aptos.ts",
+    "permit-signature":  "tsx src/permit2-signature.ts",
+    "evm-swap":  "tsx src/samechain/evm.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aptos-labs/ts-sdk": "^3.1.2",
+    "@ethersproject/bignumber": "^5.8.0",
+    "@solana/web3.js": "^1.98.2",
+    "axios": "^1.10.0",
+    "bs58": "^6.0.0",
+    "dotenv": "^17.0.1",
+    "ethers": "^6.15.0",
+    "tsx": "^4.20.3"
+  }
+}

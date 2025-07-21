@@ -11,9 +11,9 @@
     "multi-token-evm-aptos": "tsx src/cross-chain-multi-token-swap/evm-aptos.ts",
     "multi-token-solana-aptos": "tsx src/cross-chain-multi-token-swap/solana-aptos.ts",
     "multi-chain-polygon-avalanche-aptos": "tsx src/multi-chain-batch-cross-chain-swap/polygon-avalanche-aptos.ts",
-    "multi-chain-polygon-solana-aptos":  "tsx src/multi-chain-batch-cross-chain-swap/polygon-solana-aptos.ts",
-    "permit-signature":  "tsx src/permit2-signature.ts",
-    "evm-swap":  "tsx src/samechain/evm.ts"
+    "multi-chain-polygon-solana-aptos": "tsx src/multi-chain-batch-cross-chain-swap/polygon-solana-aptos.ts",
+    "permit-signature": "tsx src/permit2-signature.ts",
+    "evm-swap": "tsx src/samechain/evm.ts"
   },
   "keywords": [],
   "author": "",
@@ -25,7 +25,9 @@
     "axios": "^1.10.0",
     "bs58": "^6.0.0",
     "dotenv": "^17.0.1",
-    "ethers": "^6.15.0",
+    "ethers": "^6.15.0"
+  },
+  "devDependencies": {
     "tsx": "^4.20.3"
   }
 }

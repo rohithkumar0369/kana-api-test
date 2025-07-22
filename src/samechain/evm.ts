@@ -14,8 +14,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const local = {
-  sameChainQuote: "http://localhost:3000/v1/swapQuote",
-  sameChainInstruction: "http://localhost:3000/v1/swapInstruction",
+  swapQuote: "https://ag-test.kanalabs.io/v1/swapQuote",
+  swapInstruction: "https://ag-test.kanalabs.io/v1/swapInstruction",
 };
 
 if (!process.env.HEDERA_PRIVATE_KEY || !process.env.HEDERA_ACCOUNT_ID) {
@@ -63,12 +63,12 @@ async function runFullSwapFlow() {
   try {
     console.log(" Starting");
 
-    const quoteResponse = await axios.get(local.sameChainQuote, {
+    const quoteResponse = await axios.get(local.swapQuote, {
       params: {
-        inputToken: "0x0000000000000000000000000000000000000000", 
-        outputToken: "0x000000000000000000000000000000000006f89a", 
+        inputToken: "0x0000000000000000000000000000000000000000",
+        outputToken: "0x000000000000000000000000000000000006f89a",
         chain: "12",
-        amountIn: "1000000", 
+        amountIn: "1000000",
         slippage: 0.5,
         evmExchange: JSON.stringify(["etaSwap"]),
       },
@@ -83,11 +83,11 @@ async function runFullSwapFlow() {
     console.log(" Quote selected:", quoteData);
 
     const instructionResponse = await axios.post(
-      local.sameChainInstruction,
+      local.swapInstruction,
       {
         chain: "12",
         quote: quoteData,
-        address: "0x4ade31Ee6009cB35427afEb784B59E881a459225", 
+        address: "0x4ade31Ee6009cB35427afEb784B59E881a459225",
       },
       {
         headers: { "Content-Type": "application/json" },
@@ -104,25 +104,22 @@ async function runFullSwapFlow() {
 
     const usdcTokenId = TokenId.fromString("0.0.456858");
     console.log(
-      ` Approving ${
-        quoteData.amountIn
-      } USDC to ${spenderContractId.toString()}`
+      ` Approving ${quoteData.amountIn} USDC to ${spenderContractId.toString()}`
     );
 
-   const allowanceTx = await new AccountAllowanceApproveTransaction()
-     .approveTokenAllowance(
-       usdcTokenId,
-       accountId,
-       spenderContractId,
-       quoteData.amountIn
-     )
-     .freezeWith(hederaClient)
-     .sign(privateKey);
+    const allowanceTx = await new AccountAllowanceApproveTransaction()
+      .approveTokenAllowance(
+        usdcTokenId,
+        accountId,
+        spenderContractId,
+        quoteData.amountIn
+      )
+      .freezeWith(hederaClient)
+      .sign(privateKey);
 
     const allowanceRes = await allowanceTx.execute(hederaClient);
     const allowanceReceipt = await allowanceRes.getReceipt(hederaClient);
     console.log(" HTS Allowance status:", allowanceReceipt.status.toString());
-
 
     await executeContractCall(swapIX, "Swap");
 

@@ -21,6 +21,7 @@
   "dependencies": {
     "@aptos-labs/ts-sdk": "^3.1.2",
     "@ethersproject/bignumber": "^5.8.0",
+    "@hashgraph/sdk": "^2.68.0",
     "@solana/web3.js": "^1.98.2",
     "axios": "^1.10.0",
     "bs58": "^6.0.0",
@@ -28,6 +29,7 @@
     "ethers": "^6.15.0"
   },
   "devDependencies": {
+    "@types/node": "^24.0.15",
     "tsx": "^4.20.3"
   }
 }

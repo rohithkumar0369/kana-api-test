@@ -15,12 +15,12 @@ dotenv.config();
 
 // Config
 const accountId = AccountId.fromString(process.env.HEDERA_ACCOUNT_ID!);
-const privateKey = PrivateKey.fromString(process.env.HEDERA_PRIVATE_KEY!);
+const privateKey = PrivateKey.fromStringECDSA(process.env.HEDERA_PRIVATE_KEY!);
 const client = Client.forMainnet().setOperator(accountId, privateKey);
 
-const inputToken = "0x000000000000000000000000000000000022d6de"; // KARATE
-const outputToken = "0x0000000000000000000000000000000000000000"; // HBAR
-const amountIn = "1000000"; 
+const inputToken: string = "0x000000000000000000000000000000000022d6de"; // KARATE
+const outputToken: string = "0x0000000000000000000000000000000000000000"; // HBAR
+const amountIn: string = "1000000";
 
 const local = {
   swapQuote: "https://ag-test.kanalabs.io/v1/swapQuote",
@@ -38,58 +38,63 @@ async function executeContractCall(ix: any) {
     tx.setPayableAmount(Hbar.fromTinybars(ix.value));
   }
 
-  const res = await (
-    await tx.freezeWith(client).sign(privateKey)
-  ).execute(client);
+  const signedTx = await tx.freezeWith(client).sign(privateKey);
+  const res = await signedTx.execute(client);
+  const txId = res.transactionId.toString();
   const receipt = await res.getReceipt(client);
-  console.log("Swap tx status:", receipt.status.toString());
+
+  console.log("Swap Tx Hash:", txId);
+  console.log("Swap Status:", receipt.status.toString());
 }
 
 async function main() {
-  const quote = await axios.get(local.swapQuote, {
-    params: {
+  try {
+    const quote = await axios.get(local.swapQuote, {
+      params: {
+        chain: "12",
+        inputToken,
+        outputToken,
+        amountIn,
+        slippage: 0.5,
+        evmExchange: JSON.stringify(["etaSwap"]),
+      },
+    });
+
+    const route = quote.data?.data?.[0];
+    if (!route) throw new Error("No swap route found");
+
+    const instruction = await axios.post(local.swapInstruction, {
       chain: "12",
-      inputToken,
-      outputToken,
-      amountIn,
-      slippage: 0.5,
-      evmExchange: JSON.stringify(["etaSwap"]),
-    },
-  });
+      quote: route,
+      address: "0x4ade31Ee6009cB35427afEb784B59E881a459225",
+    });
 
-  const route = quote.data?.data?.[0];
-  if (!route) throw new Error("No swap route found");
+    const swapIX = instruction.data?.data?.swapIX;
+    if (!swapIX) throw new Error("No swap instruction returned");
 
-  const instruction = await axios.post(local.swapInstruction, {
-    chain: "12",
-    quote: route,
-    address: "0x4ade31Ee6009cB35427afEb784B59E881a459225",
-  });
+    if (
+      inputToken !== outputToken &&
+      inputToken !== "0x0000000000000000000000000000000000000000"
+    ) {
+      const tokenId = TokenId.fromString(
+        `0.0.${parseInt(inputToken.slice(-40), 16)}`
+      );
+      const spender = ContractId.fromSolidityAddress(swapIX.to);
 
-  const swapIX = instruction.data?.data?.swapIX;
-  if (!swapIX) throw new Error("No swap instruction returned");
+      await new AccountAllowanceApproveTransaction()
+        .approveTokenAllowance(tokenId, accountId, spender, Number(amountIn))
+        .freezeWith(client)
+        .sign(privateKey)
+        .then((tx) => tx.execute(client))
+        .then((res) => res.getReceipt(client));
+    }
 
-  // Approve if needed
-  if (
-    inputToken !== outputToken &&
-    inputToken !== "0x0000000000000000000000000000000000000000"
-  ) {
-    const tokenId = TokenId.fromString(
-      `0.0.${parseInt(inputToken.slice(-40), 16)}`
-    );
-    const spender = ContractId.fromSolidityAddress(swapIX.to);
-
-    const approveTx = await new AccountAllowanceApproveTransaction()
-      .approveTokenAllowance(tokenId, accountId, spender, amountIn)
-      .freezeWith(client)
-      .sign(privateKey);
-
-    const approveRes = await approveTx.execute(client);
-    const approveReceipt = await approveRes.getReceipt(client);
-    console.log("Approve status:", approveReceipt.status.toString());
+    await executeContractCall(swapIX);
+    process.exit(0);
+  } catch (err) {
+    console.error("Swap failed:", err);
+    process.exit(1);
   }
-
-  await executeContractCall(swapIX);
 }
 
-main().catch(console.error);
+main();
